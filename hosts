@@ -1,0 +1,2 @@
+[web_servers]
+ubuntu_host ansible_host=44.201.152.3 ansible_user=ubuntu ansible_ssh_private_key_file=/home/trongtam/Downloads/tamnt1_key_pair.pem 

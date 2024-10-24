@@ -1,0 +1,87 @@
+---
+# tasks file for roles/install_software
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+- name: Install Apache, Mysql, Php
+  apt:
+    name: "{{item}}"
+    state: present
+  loop:
+    - apache2
+    - mysql-server
+    - php
+    - php-mysql
+    - libapache2-mod-php
+    - php-cli
+    - php-curl
+    - php-gd
+    - php-xml
+    - python3-mysqldb
+- name: Set MySQL root password
+  mysql_user:
+    login_user: root
+    login_password: "{{mysql_root_password}}"
+    name: root
+    password: "{{ mysql_root_password }}"
+    host_all: yes
+
+- name: Remove anonymous MySQL users
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    user: ""
+    host_all: yes
+    state: absent
+
+- name: Create WordPress database
+  mysql_db:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: "{{ mysql_db_name }}"
+    state: present
+
+- name: Create WordPress MySQL user
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: "{{ mysql_user }}"
+    password: "{{ mysql_password }}"
+    priv: "{{ mysql_db_name }}.*:ALL"
+    state: present
+
+- name: Download WordPress
+  get_url:
+    url: "{{ wordpress_url }}"
+    dest: "/tmp/wordpress.tar.gz"
+
+- name: Create directory for WordPress
+  file:
+    path: /var/www/html/wordpress
+    state: directory
+
+- name: Extract WordPress
+  unarchive:
+    src: "/tmp/wordpress.tar.gz"
+    dest: /var/www/html/wordpress
+    remote_src: yes
+
+- name: Copy wp-config.php
+  template:
+    src: wp-config.php.j2
+    dest: /var/www/html/wordpress/wp-config.php
+    owner: www-data
+    group: www-data
+
+- name: Set file permissions
+  file:
+    path: /var/www/html/wordpress/
+    recurse: yes
+    owner: www-data
+    group: www-data
+
+- name: Restart Apache
+  service:
+    name: apache2
+    state: restarted
