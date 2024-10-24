@@ -1,5 +1,8 @@
 ---
 - hosts: web_servers
   become: yes
+  vars_files:
+    - roles/install_software/vars/vault.yml # Chỉ định file Vault
+    - roles/install_software/defaults/main.yml # Bao gồm file defaults nếu cần
   roles:
     - install_software
